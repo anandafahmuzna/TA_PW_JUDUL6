@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Cuaca Premium</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class', 
+            theme: {
+                extend: {
+                    colors: {
+                        // DARK MODE COLORS
+                        'base-dark': '#1e202b',
+                        'card-dark': '#2d303f',
+                        'sidebar-dark': '#262933',
+                        // LIGHT MODE COLORS
+                        'base-light': '#F0F4F8',
+                        'card-light': '#FFFFFF',
+                        'sidebar-light': '#E0E7ED',
+                        // Warna Aksen
+                        'accent-yellow': '#FFD700', 
+                        'accent-blue': '#4A90E2', 
+                        // Warna Teks Default
+                        'text-dark-primary': '#263238', 
+                        'text-dark-secondary': '#607D8B',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css">
+    
+    <style>
+        /* Sembunyikan Scrollbar untuk Ramalan Per Jam */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* ------------------------------------- */
+        /* LIGHT MODE STYLES (Kontras Diperbaiki) */
+        /* ------------------------------------- */
+        body:not(.dark) {
+            background-color: var(--tw-colors-base-light); /* base-light */
+            color: var(--tw-colors-text-dark-primary); /* Teks utama jadi gelap */
+        }
+        
+        /* Sidebar & Navigation */
+        body:not(.dark) .bg-sidebar-dark {
+            background-color: var(--tw-colors-sidebar-light);
+        }
+        body:not(.dark) .nav-btn:not(.active) {
+            color: var(--tw-colors-text-dark-secondary);
+        }
+        body:not(.dark) .nav-btn:not(.active):hover {
+            background-color: #CFD8DC;
+        }
+        body:not(.dark) .nav-btn.active {
+            background-color: #CFD8DC; /* Warna aktif navigasi di Light Mode */
+            color: var(--tw-colors-accent-blue);
+        }
+
+        /* Cards & Shadow */
+        body:not(.dark) .bg-card-dark {
+            background-color: var(--tw-colors-card-light);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            color: var(--tw-colors-text-dark-primary);
+        }
+
+        /* Search Bar & Autocomplete */
+        body:not(.dark) .bg-sidebar-dark input {
+             /* Target Input di dalam Search Bar */
+            background-color: transparent; 
+            color: var(--tw-colors-text-dark-primary);
+        }
+        body:not(.dark) .bg-sidebar-dark input::placeholder {
+            color: var(--tw-colors-text-dark-secondary);
+        }
+        body:not(.dark) #autocomplete-results {
+            background-color: var(--tw-colors-card-light);
+            border-color: #CFD8DC;
+        }
+        body:not(.dark) #autocomplete-results li {
+            color: var(--tw-colors-text-dark-primary);
+        }
+        body:not(.dark) #autocomplete-results li:hover {
+            background-color: #ECEFF1;
+        }
+
+        /* Helper Text & Secondary Text */
+        body:not(.dark) .text-gray-400 {
+            color: var(--tw-colors-text-dark-secondary);
+        }
+        body:not(.dark) .text-gray-500 {
+            color: #78909C; 
+        }
+
+        /* Favorites & Toggles */
+        body:not(.dark) .unit-toggle {
+            color: var(--tw-colors-text-dark-secondary);
+        }
+        body:not(.dark) .unit-toggle.active {
+            color: var(--tw-colors-accent-blue);
+        }
+        body:not(.dark) .favorite-tag {
+            background-color: #BBDEFB;
+            color: #1976D2;
+        }
+        body:not(.dark) .remove-fav-btn {
+            color: var(--tw-colors-text-dark-secondary);
+        }
+        body:not(.dark) .remove-fav-btn:hover {
+            color: #E53935;
+        }
+        body:not(.dark) .border-card-dark\/50 {
+            border-color: #CFD8DC;
+        }
+    </style>
+</head>
+<body class="bg-base-dark text-white dark transition-colors duration-500">
+    
+    <div id="loading-indicator" class="fixed top-0 left-0 w-full bg-black bg-opacity-80 dark:bg-opacity-80 text-white text-center py-3 z-50 font-bold hidden">
+        <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data cuaca...
+    </div>
+    
+    <div class="flex h-screen p-4 sm:p-6 md:p-8">
+
+        <aside class="w-20 md:w-24 bg-sidebar-dark rounded-xl shadow-2xl p-4 flex flex-col justify-between items-center mr-6 transition-colors duration-500">
+            <div class="space-y-8 w-full">
+                <div class="text-3xl text-accent-blue mb-8 text-center">
+                    <i class="fas fa-wind"></i>
+                </div>
+                
+                <nav class="space-y-4 text-gray-400 text-xl w-full">
+                    <button id="nav-weather-main" class="nav-btn block p-2 rounded-lg bg-card-dark text-accent-blue active text-center transition-colors duration-300" title="Cuaca Utama">
+                        <i class="fas fa-cloud-sun"></i>
+                        <span class="text-xs block">Cuaca</span>
+                    </button>
+                    
+                    <button id="nav-cities-list" class="nav-btn block p-2 rounded-lg hover:bg-card-dark w-full text-center transition-colors duration-300" title="Daftar Kota Favorit">
+                        <i class="fas fa-list"></i>
+                        <span class="text-xs block">Kota</span>
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="space-y-4 text-gray-400 text-xl w-full">
+                <button id="theme-toggle" class="block p-2 rounded-lg hover:bg-card-dark w-full text-center transition-colors duration-300" title="Tema">
+                    <span id="theme-icon">☀️</span>
+                    <span class="text-xs block">Tema</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <section id="weather-section-left" class="md:col-span-2 space-y-6 transition-all duration-300">
+                
+                <div id="search-bar-container" class="relative bg-sidebar-dark rounded-xl p-3 flex items-center shadow-lg transition-colors duration-500">
+                    <input type="text" id="city-input" placeholder="Cari kota..." autocomplete="off"
+                        class="w-full bg-transparent placeholder-gray-400 focus:outline-none text-lg px-2">
+                    <button id="search-button" class="text-gray-400 hover:text-accent-blue mr-2 transition-colors duration-300"><i class="fas fa-search"></i></button>
+                    <button id="refresh-button" class="text-gray-400 hover:text-accent-blue transition-colors duration-300"><i class="fas fa-sync-alt"></i></button>
+                    
+                    <ul id="autocomplete-results" class="absolute top-14 left-0 right-0 bg-card-dark border border-sidebar-dark rounded-lg shadow-xl z-10 max-h-40 overflow-y-auto hidden">
+                    </ul>
+                </div>
+                
+                <div id="current-weather" class="bg-card-dark rounded-xl p-8 shadow-2xl flex justify-between items-center transition-colors duration-500">
+                    <div>
+                        <h2 id="current-location" class="text-4xl font-semibold">--</h2>
+                        <p id="current-condition" class="text-gray-400 text-lg mt-1 transition-colors duration-500">--</p>
+                        <p id="current-timestamp" class="text-gray-500 text-sm mb-3 transition-colors duration-500">Memuat...</p> 
+                        <div class="flex items-start my-4">
+                            <span id="current-temp" class="text-8xl font-light">--</span>
+                            <div class="flex flex-col ml-3 mt-4 text-lg">
+                                <button id="celsius-toggle" class="unit-toggle text-accent-blue active font-bold transition-colors duration-300">°C</button>
+                                <button id="fahrenheit-toggle" class="unit-toggle text-gray-400 hover:text-accent-blue transition-colors duration-300">°F</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative w-40 h-40">
+                         <i id="current-icon" class="wi wi-na absolute inset-0 text-[10rem] text-accent-yellow drop-shadow-lg transition-colors duration-500"></i>
+                    </div>
+                </div>
+
+                <div id="hourly-forecast-card" class="bg-card-dark rounded-xl p-6 shadow-lg transition-colors duration-500">
+                    <h3 class="text-xl font-semibold mb-4">Ramalan Hari Ini (Per Jam)</h3>
+                    <div id="hourly-forecast-container" class="flex overflow-x-auto space-x-6 pb-2 scrollbar-hide">
+                        </div>
+                </div>
+                
+                <div id="air-conditions-card" class="bg-card-dark rounded-xl p-6 shadow-lg transition-colors duration-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold">Kondisi Udara</h3>
+                        <button id="add-favorite-button" class="text-sm px-3 py-1 bg-accent-blue/20 text-accent-blue rounded-full hover:bg-accent-blue hover:text-white transition-colors duration-300">
+                            <i class="far fa-heart"></i> Tambah Favorit
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-lg">
+                        <p><i class="fas fa-thermometer-half text-accent-blue w-6"></i> Real Feel: <span id="real-feel-temp" class="font-semibold">--</span></p>
+                        <p><i class="fas fa-wind text-accent-blue w-6"></i> Kecepatan Angin: <span id="current-wind" class="font-semibold">--</span> km/j</p>
+                        <p><i class="fas fa-tint text-accent-blue w-6"></i> Kelembaban: <span id="current-humidity" class="font-semibold">--</span>%</p>
+                        <p><i class="fas fa-sun text-accent-blue w-6"></i> UV Index: <span id="uv-index" class="font-semibold">--</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="weather-section-right" class="md:col-span-1 space-y-6">
+                
+                <div id="forecast-7-day-card" class="bg-card-dark rounded-xl p-6 shadow-lg transition-colors duration-500">
+                    <h3 class="text-xl font-semibold mb-4">Ramalan 7 Hari</h3>
+                    <div id="forecast-container" class="space-y-3">
+                        </div>
+                </div>
+
+                <div id="favorite-cities-main-card" class="bg-card-dark rounded-xl p-6 shadow-lg transition-colors duration-500">
+                    <h3 class="text-xl font-semibold mb-3">Daftar Kota Favorit</h3>
+                    <div id="favorite-cities-detailed-container" class="space-y-3">
+                        </div>
+                    <p id="no-favorite-message" class="text-gray-500 text-sm italic mt-3 hidden transition-colors duration-500">Belum ada kota favorit. Tambahkan melalui kotak pencarian atau tombol di bawah Kondisi Udara.</p>
+
+                    <h3 class="text-lg font-semibold mt-6 mb-3 border-t border-card-dark/50 pt-3">Tag Favorit</h3>
+                    <div id="favorite-cities-container" class="flex flex-wrap gap-2 text-sm">
+                        </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "884c11bb928cc0efea9b205631f65274"; 
+        const BASE_URL = "https://api.openweathermap.org/data/2.5";
+        let isCelsius = true;
+        let isDarkMode = true; 
+        let currentWeatherData = null;
+        let currentForecastData = null;
+        let currentCityName = '';
+
+        const DEFAULT_CITY = "Bandar Lampung"; 
+        const AUTOCOMPLETE_CITIES = ["Jakarta", "Surabaya", "Medan", "Bandung", "Semarang", "Yogyakarta", "Malang", "Bandar Lampung", "Makassar", "Palembang", "Denpasar", "Balikpapan", "Manado", "Padang", "Batam", "London", "New York", "Paris", "Tokyo", "Singapore", "Sydney"];
+
+        // --- Elemen DOM ---
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const currentTempEl = document.getElementById('current-temp');
+        const cityInput = document.getElementById('city-input');
+        const autocompleteResults = document.getElementById('autocomplete-results');
+        const favoriteCitiesContainer = document.getElementById('favorite-cities-container');
+        const celsiusToggle = document.getElementById('celsius-toggle');
+        const fahrenheitToggle = document.getElementById('fahrenheit-toggle');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const hourlyForecastContainer = document.getElementById('hourly-forecast-container');
+        const realFeelEl = document.getElementById('real-feel-temp');
+        const forecastContainer = document.getElementById('forecast-container');
+        const navWeatherMain = document.getElementById('nav-weather-main');
+        const navCitiesList = document.getElementById('nav-cities-list');
+        const detailedFavoritesContainer = document.getElementById('favorite-cities-detailed-container');
+        const noFavoriteMessage = document.getElementById('no-favorite-message');
+        // BARU: Elemen untuk menampilkan timestamp
+        const currentTimestampEl = document.getElementById('current-timestamp'); 
+
+        // Kontainer Konten untuk Navigasi
+        const weatherSectionLeft = document.getElementById('weather-section-left');
+        const forecast7DayCard = document.getElementById('forecast-7-day-card');
+        const favoriteCitiesMainCard = document.getElementById('favorite-cities-main-card');
+
+
+        // ====================================
+        // FUNGSI NAVIGASI
+        // ====================================
+
+        function navigateTo(target) {
+            // Hapus kelas aktif dari semua tombol nav
+            navWeatherMain.classList.remove('bg-card-dark', 'text-accent-blue', 'active');
+            navCitiesList.classList.remove('bg-card-dark', 'text-accent-blue', 'active');
+            
+            // Tampilkan/Sembunyikan Konten
+            if (target === 'weather') {
+                // Aktifkan tampilan Cuaca Utama
+                navWeatherMain.classList.add('bg-card-dark', 'text-accent-blue', 'active');
+                
+                // Tampilkan konten cuaca
+                weatherSectionLeft.classList.remove('hidden', 'md:col-span-3');
+                weatherSectionLeft.classList.add('md:col-span-2');
+                forecast7DayCard.classList.remove('hidden');
+                
+                // Sembunyikan daftar favorit utama di kolom kanan, hanya tampilkan tag
+                favoriteCitiesMainCard.querySelector('h3').textContent = 'Daftar Kota Favorit'; // Reset judul
+                detailedFavoritesContainer.classList.remove('hidden');
+                noFavoriteMessage.classList.remove('hidden'); // Dikelola oleh renderDetailedFavoriteCities
+
+            } else if (target === 'cities') {
+                // Aktifkan tampilan Kota Favorit
+                navCitiesList.classList.add('bg-card-dark', 'text-accent-blue', 'active');
+                
+                // Sembunyikan konten cuaca di kolom kiri
+                weatherSectionLeft.classList.add('hidden');
+                
+                // Atur kolom kanan untuk mengambil seluruh lebar jika di layar besar
+                const mainContent = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-3');
+                mainContent.style.display = 'grid'; // Pastikan grid aktif
+
+                // Pindahkan kartu favorit agar terasa mengambil kolom penuh
+                const mainCardContainer = document.getElementById('weather-section-right');
+                
+                // Tampilkan Daftar Kota Favorit utama
+                forecast7DayCard.classList.add('hidden');
+                favoriteCitiesMainCard.querySelector('h3').textContent = 'Semua Kota Favorit'; // Ubah judul
+
+                // Memastikan data favorit dimuat
+                renderDetailedFavoriteCities();
+            }
+        }
+
+
+        // ====================================
+        // FUNGSI CUACA & DATA
+        // ====================================
+
+        function getWeatherIconClass(iconCode) {
+            const prefix = 'wi wi-';
+            const code = parseInt(iconCode.substring(0, 2));
+            const dayNight = iconCode.slice(-1) === 'd' ? 'day' : 'night';
+
+            switch (code) {
+                case 1: return prefix + dayNight + '-sunny';
+                case 2: return prefix + dayNight + '-cloudy';
+                case 3: return prefix + dayNight + '-cloudy';
+                case 4: return prefix + 'cloudy';
+                case 9: return prefix + 'showers';
+                case 10: return prefix + dayNight + '-rain';
+                case 11: return prefix + 'thunderstorm';
+                case 13: return prefix + 'snow';
+                case 50: return prefix + 'fog';
+                default: return prefix + 'na';
+            }
+        }
+
+        function toggleLoading(show) {
+            loadingIndicator.classList.toggle('hidden', !show);
+        }
+
+        function convertTemp(tempInC) {
+            const temp = parseFloat(tempInC);
+            if (isNaN(temp)) return '--';
+            
+            if (isCelsius) {
+                return `${Math.round(temp)}°`;
+            } else {
+                const tempF = (temp * 9 / 5) + 32;
+                return `${Math.round(tempF)}°`;
+            }
+        }
+
+        function updateAllTemperatures() {
+            if (!currentWeatherData) return;
+            currentTempEl.textContent = convertTemp(currentWeatherData.main.temp);
+            realFeelEl.textContent = convertTemp(currentWeatherData.main.feels_like);
+            
+            displayForecast(currentForecastData); 
+            displayHourlyForecast(currentForecastData);
+            renderDetailedFavoriteCities(); 
+        }
+
+        async function fetchWeatherData(city) {
+            toggleLoading(true);
+            try {
+                cityInput.blur();
+                autocompleteResults.classList.add('hidden');
+                
+                const currentWeatherUrl = `${BASE_URL}/weather?q=${city}&appid=${API_KEY}&units=metric&lang=id`;
+                const currentResponse = await fetch(currentWeatherUrl);
+                currentWeatherData = await currentResponse.json();
+
+                if (currentResponse.status !== 200) throw new Error(currentWeatherData.message || 'Kota tidak ditemukan');
+                
+                currentCityName = currentWeatherData.name;
+                
+                const lat = currentWeatherData.coord.lat;
+                const lon = currentWeatherData.coord.lon;
+                const forecastUrl = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=id`;
+                const forecastResponse = await fetch(forecastUrl);
+                currentForecastData = await forecastResponse.json();
+
+                if (forecastResponse.status !== 200) throw new Error(currentForecastData.message || 'Gagal memuat ramalan.');
+
+                displayCurrentWeather(currentWeatherData);
+                displayForecast(currentForecastData);
+                displayHourlyForecast(currentForecastData);
+                updateFavoriteButton(currentCityName);
+                
+                saveCityDataToLocalStorage(currentCityName, currentWeatherData);
+                
+                // Pastikan navigasi kembali ke 'weather' saat kota baru dimuat
+                navigateTo('weather'); 
+
+            } catch (error) {
+                console.error("Gagal mengambil data cuaca:", error);
+                document.getElementById('current-location').textContent = '❌ ERROR';
+                document.getElementById('current-condition').textContent = `Gagal memuat: ${error.message}`;
+                currentTempEl.textContent = '--';
+                realFeelEl.textContent = '--';
+                document.getElementById('current-wind').textContent = '--';
+                document.getElementById('current-humidity').textContent = '--';
+                document.getElementById('uv-index').textContent = '--';
+                hourlyForecastContainer.innerHTML = '';
+                forecastContainer.innerHTML = '';
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        function displayCurrentWeather(data) {
+            document.getElementById('current-location').textContent = data.name;
+            document.getElementById('current-condition').textContent = data.weather[0].description.replace(/\b\w/g, l => l.toUpperCase());
+            document.getElementById('current-humidity').textContent = data.main.humidity;
+            document.getElementById('current-wind').textContent = (data.wind.speed * 3.6).toFixed(1); 
+            document.getElementById('uv-index').textContent = Math.round(data.main.temp / 10); 
+            
+            // --- LOGIKA BARU UNTUK TIMESTAMP ---
+            const timestamp = new Date(data.dt * 1000); 
+            // Format waktu ke HH:MM (misal: 23:45)
+            const timeString = timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            // Tampilkan di elemen yang baru ditambahkan
+            currentTimestampEl.textContent = `Diperbarui pada: ${timeString} WIB`;
+            // --- END LOGIKA BARU ---
+
+            const iconCode = data.weather[0].icon;
+            document.getElementById('current-icon').className = getWeatherIconClass(iconCode) + ' absolute inset-0 text-[10rem] text-accent-yellow drop-shadow-lg';
+
+            updateAllTemperatures();
+        }
+
+        function displayForecast(forecastData) {
+            forecastContainer.innerHTML = '';
+            
+            const dailyDataMap = new Map();
+            forecastData.list.forEach(item => {
+                const dateKey = new Date(item.dt * 1000).toDateString();
+                
+                if (!dailyDataMap.has(dateKey)) {
+                    dailyDataMap.set(dateKey, {
+                        temp_min: item.main.temp_min,
+                        temp_max: item.main.temp_max,
+                        icon: item.weather[0].icon,
+                        description: item.weather[0].description,
+                        dt: item.dt
+                    });
+                } else {
+                    const existing = dailyDataMap.get(dateKey);
+                    existing.temp_min = Math.min(existing.temp_min, item.main.temp_min);
+                    existing.temp_max = Math.max(existing.temp_max, item.main.temp_max);
+                }
+            });
+
+            const dailyForecasts = Array.from(dailyDataMap.values()).slice(0, 7); 
+
+            dailyForecasts.forEach(item => {
+                const date = new Date(item.dt * 1000);
+                const dayName = date.toLocaleDateString('id-ID', { weekday: 'short' });
+                const isToday = dailyForecasts.indexOf(item) === 0;
+                
+                const card = document.createElement('div');
+                card.className = 'flex justify-between items-center py-2 border-b border-card-dark/50 last:border-b-0 transition-colors duration-500';
+                card.innerHTML = `
+                    <div class="w-1/4 text-sm font-semibold">${isToday ? 'Hari Ini' : dayName}</div>
+                    <div class="flex items-center w-1/3 justify-center">
+                        <i class="${getWeatherIconClass(item.icon)} text-2xl text-accent-yellow mr-2"></i>
+                        <span class="text-sm">${item.description.split(' ')[0]}</span>
+                    </div>
+                    <div class="w-1/4 text-right text-sm font-bold">
+                        ${convertTemp(item.temp_max)} / <span class="text-gray-400 font-normal">${convertTemp(item.temp_min)}</span>
+                    </div>
+                `;
+                forecastContainer.appendChild(card);
+            });
+        }
+
+        function displayHourlyForecast(forecastData) {
+            hourlyForecastContainer.innerHTML = '';
+            const hourlyList = forecastData.list.slice(0, 8);
+
+            hourlyList.forEach(item => {
+                const time = new Date(item.dt * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(' 0', '');
+                
+                const card = document.createElement('div');
+                card.className = 'flex flex-col items-center p-3 rounded-lg hover:bg-sidebar-dark transition-colors duration-300 flex-shrink-0 w-24';
+                card.innerHTML = `
+                    <p class="text-sm text-gray-400">${time}</p>
+                    <i class="${getWeatherIconClass(item.weather[0].icon)} text-3xl text-accent-yellow my-2"></i>
+                    <p class="text-lg font-semibold">${convertTemp(item.main.temp)}</p>
+                    <p class="text-xs text-gray-500">${item.weather[0].description.split(' ')[0]}</p>
+                `;
+                hourlyForecastContainer.appendChild(card);
+            });
+        }
+
+
+        // ====================================
+        // FUNGSI INTERAKTIF & LOCAL STORAGE
+        // ====================================
+        
+        function updateUnitToggleClasses() {
+            celsiusToggle.classList.remove('text-gray-400', 'hover:text-accent-blue', 'active', 'font-bold');
+            fahrenheitToggle.classList.remove('text-gray-400', 'hover:text-accent-blue', 'active', 'font-bold');
+            
+            if (isCelsius) {
+                celsiusToggle.classList.add('active', 'text-accent-blue', 'font-bold');
+                celsiusToggle.classList.remove('text-gray-400');
+                fahrenheitToggle.classList.add('text-gray-400', 'hover:text-accent-blue');
+            } else {
+                fahrenheitToggle.classList.add('active', 'text-accent-blue', 'font-bold');
+                fahrenheitToggle.classList.remove('text-gray-400');
+                celsiusToggle.classList.add('text-gray-400', 'hover:text-accent-blue');
+            }
+        }
+        
+        function getFavoriteCities() {
+            const favorites = localStorage.getItem('weatherFavorites');
+            return favorites ? JSON.parse(favorites) : [];
+        }
+
+        function saveFavoriteCities(cities) {
+            localStorage.setItem('weatherFavorites', JSON.stringify(cities));
+            renderFavoriteCities();
+        }
+
+        function removeFavoriteCity(cityToRemove) {
+            let favorites = getFavoriteCities();
+            favorites = favorites.filter(city => city !== cityToRemove);
+            saveFavoriteCities(favorites);
+        }
+        
+        function saveCityDataToLocalStorage(city, data) {
+            const cityData = {
+                temp: data.main.temp,
+                icon: data.weather[0].icon,
+                description: data.weather[0].description.replace(/\b\w/g, l => l.toUpperCase())
+            };
+            let storedData = JSON.parse(localStorage.getItem('weatherCityDetails')) || {};
+            storedData[city] = cityData;
+            localStorage.setItem('weatherCityDetails', JSON.stringify(storedData));
+            
+            renderDetailedFavoriteCities();
+        }
+
+        function getCityDataFromLocalStorage() {
+            return JSON.parse(localStorage.getItem('weatherCityDetails')) || {};
+        }
+
+        function renderDetailedFavoriteCities() {
+            const favorites = getFavoriteCities();
+            const cityDetails = getCityDataFromLocalStorage();
+            detailedFavoritesContainer.innerHTML = '';
+
+            if (favorites.length === 0) {
+                noFavoriteMessage.classList.remove('hidden');
+                return;
+            }
+            noFavoriteMessage.classList.add('hidden');
+
+            favorites.forEach(city => {
+                const data = cityDetails[city] || { temp: '??', icon: '01d', description: 'Memuat' }; 
+                
+                const card = document.createElement('button');
+                // Tambahkan kelas w-full agar tombol kota penuh di Light/Dark mode
+                card.className = 'w-full flex justify-between items-center p-3 rounded-lg bg-sidebar-dark hover:bg-card-dark/50 transition-colors duration-200 shadow-md text-left';
+                card.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="${getWeatherIconClass(data.icon)} text-2xl text-accent-yellow mr-3"></i>
+                        <div>
+                            <span class="font-semibold block">${city}</span>
+                            <span class="text-xs text-gray-400">${data.description}</span>
+                        </div>
+                    </div>
+                    <div class="text-lg font-bold">
+                        ${convertTemp(data.temp)}
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    fetchWeatherData(city);
+                    navigateTo('weather'); // Kembali ke tampilan cuaca utama setelah memilih kota
+                });
+
+                detailedFavoritesContainer.appendChild(card);
+            });
+        }
+        
+        function renderFavoriteCities() {
+            const favorites = getFavoriteCities();
+            favoriteCitiesContainer.innerHTML = '';
+
+            favorites.forEach(city => {
+                const tag = document.createElement('div');
+                tag.className = 'favorite-tag flex items-center text-sm px-3 py-1 rounded-full cursor-pointer hover:bg-accent-blue hover:text-white transition-colors duration-300';
+                tag.textContent = city;
+                
+                tag.addEventListener('click', () => fetchWeatherData(city)); 
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-fav-btn ml-2 bg-transparent transition-colors duration-200 p-0';
+                removeBtn.innerHTML = '<i class="fas fa-times-circle"></i>';
+                removeBtn.title = 'Hapus dari favorit';
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    removeFavoriteCity(city);
+                });
+                
+                tag.appendChild(removeBtn);
+                favoriteCitiesContainer.appendChild(tag);
+            });
+
+            renderDetailedFavoriteCities(); 
+            updateFavoriteButton(currentCityName);
+        }
+
+        function updateFavoriteButton(city) {
+            const favorites = getFavoriteCities();
+            const addButton = document.getElementById('add-favorite-button');
+            if (!addButton) return;
+
+            addButton.classList.remove('bg-gray-500/50', 'text-gray-400', 'cursor-not-allowed', 'hover:bg-accent-blue', 'hover:text-white');
+            addButton.classList.add('bg-accent-blue/20', 'text-accent-blue', 'hover:bg-accent-blue', 'hover:text-white');
+
+            if (favorites.includes(city)) {
+                addButton.innerHTML = '<i class="fas fa-heart"></i> Sudah Favorit';
+                addButton.disabled = true;
+                addButton.classList.remove('bg-accent-blue/20', 'text-accent-blue', 'hover:bg-accent-blue', 'hover:text-white');
+                addButton.classList.add('bg-gray-500/50', 'text-gray-400', 'cursor-not-allowed');
+            } else {
+                addButton.innerHTML = '<i class="far fa-heart"></i> Tambah Favorit';
+                addButton.disabled = false;
+            }
+        }
+
+        // Auto-complete
+        cityInput.addEventListener('input', () => {
+            const input = cityInput.value.toLowerCase();
+            autocompleteResults.innerHTML = '';
+            
+            if (input.length < 2) {
+                autocompleteResults.classList.add('hidden');
+                return;
+            }
+
+            const filteredCities = AUTOCOMPLETE_CITIES.filter(city => 
+                city.toLowerCase().includes(input)
+            );
+
+            if (filteredCities.length > 0) {
+                autocompleteResults.classList.remove('hidden');
+            } else {
+                autocompleteResults.classList.add('hidden');
+            }
+
+            filteredCities.forEach(city => {
+                const li = document.createElement('li');
+                li.className = 'px-4 py-2 cursor-pointer hover:bg-card-dark transition-colors duration-150';
+                li.textContent = city;
+                li.addEventListener('click', () => {
+                    cityInput.value = city;
+                    fetchWeatherData(city);
+                    autocompleteResults.classList.add('hidden');
+                });
+                autocompleteResults.appendChild(li);
+            });
+        });
+
+
+        // ====================================
+        // EVENT LISTENERS
+        // ====================================
+
+        document.getElementById('search-button').addEventListener('click', () => {
+            const city = cityInput.value.trim();
+            if (city) {
+                fetchWeatherData(city);
+            }
+        });
+        cityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('search-button').click();
+            }
+        });
+
+        celsiusToggle.addEventListener('click', () => {
+            if (!isCelsius) {
+                isCelsius = true;
+                updateAllTemperatures();
+                updateUnitToggleClasses();
+            }
+        });
+
+        fahrenheitToggle.addEventListener('click', () => {
+            if (isCelsius) {
+                isCelsius = false;
+                updateAllTemperatures();
+                updateUnitToggleClasses();
+            }
+        });
+
+        // Logika Tema Terang/Gelap
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            
+            document.body.classList.toggle('dark', isDarkMode);
+            
+            themeIcon.textContent = isDarkMode ? '☀️' : '🌙'; 
+
+            localStorage.setItem('themePreference', isDarkMode ? 'dark' : 'light');
+        });
+        
+        // --- Sidebar Navigasi Listener ---
+        navWeatherMain.addEventListener('click', () => {
+            navigateTo('weather');
+        });
+
+        navCitiesList.addEventListener('click', () => {
+            navigateTo('cities');
+        });
+
+        document.getElementById('refresh-button').addEventListener('click', () => {
+            if (currentCityName) {
+                fetchWeatherData(currentCityName);
+            }
+        });
+
+        document.getElementById('add-favorite-button').addEventListener('click', () => {
+            if (currentCityName && !document.getElementById('add-favorite-button').disabled) {
+                let favorites = getFavoriteCities();
+                if (!favorites.includes(currentCityName)) {
+                    favorites.push(currentCityName);
+                    saveFavoriteCities(favorites);
+                }
+            }
+        });
+
+        // Auto-refresh (5 menit = 300000 ms)
+        setInterval(() => {
+            console.log("Auto-refreshing weather data...");
+            if (currentCityName) {
+                fetchWeatherData(currentCityName);
+            }
+        }, 300000);
+
+        // ====================================
+        // INIT (Pemuatan Awal)
+        // ====================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('themePreference');
+            isDarkMode = (savedTheme === 'light') ? false : true;
+
+            document.body.classList.toggle('dark', isDarkMode); 
+            themeIcon.textContent = isDarkMode ? '☀️' : '🌙'; 
+
+            updateUnitToggleClasses();
+            renderFavoriteCities();
+            fetchWeatherData(DEFAULT_CITY);
+
+            // Tampilkan default view (Cuaca) saat inisialisasi
+            navigateTo('weather');
+        });
+    </script>
+</body>
+</html>
