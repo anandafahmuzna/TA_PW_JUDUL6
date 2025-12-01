@@ -37,24 +37,3 @@ Font Awesome (Untuk ikon UI)
 Weather Icons (Untuk ikon kondisi cuaca)
 Data Cuaca: OpenWeatherMap API
 
-# ⚙️ Cara Menjalankan Proyek
-Proyek ini adalah aplikasi front-end tunggal dan sangat mudah dijalankan.
-
-Persiapan API Key
-Dapatkan API Key dari OpenWeatherMap.
-
-Buka file index.html.
-
-Cari baris kode JavaScript berikut di bagian <script>:
-
-JavaScript
-
-# const API_KEY = "884c11bb928cc0efea9b205631f65274"; // GANTI DENGAN API KEY ANDA
-Ganti nilai string tersebut dengan API Key OpenWeatherMap Anda yang valid.
-
-Eksekusi
-Cukup buka file index.html menggunakan web browser apa pun (Chrome, Firefox, Edge, dll.).
-
-Anda dapat mengklik kanan pada file dan memilih "Open with" atau "Buka dengan" browser.
-
-Aplikasi akan langsung memuat data cuaca untuk kota default (Bandar Lampung) dan siap digunakan.
