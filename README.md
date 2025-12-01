@@ -8,39 +8,25 @@ Aplikasi ini memenuhi dan melebihi spesifikasi proyek, dengan fokus pada pengala
 
 1. Tampilan Cuaca Saat Ini (Current Weather)
 Data Lengkap: Menampilkan Suhu, Kelembaban, Kecepatan Angin (dalam km/j), dan Indeks UV.
-
 Kondisi Visual: Kondisi cuaca dilengkapi dengan ikon cuaca yang sesuai (weather-icons).
-
 Lokasi dan Waktu: Menampilkan Lokasi (Nama Kota) dan Timestamp eksplisit yang menunjukkan waktu terakhir data diperbarui.
-
 Pembaruan Real-time: Data cuaca diperbarui secara otomatis setiap 5 menit menggunakan setInterval().
-
 2. Ramalan Cuaca
 Ramalan 7 Hari: Menampilkan ramalan cuaca harian, termasuk Min/Max Temperature serta Ikon dan Deskripsi Cuaca singkat.
-
 Ramalan Per Jam: Menyediakan ramalan rinci untuk beberapa jam ke depan di hari yang sama.
-
 3. Fungsionalitas Pencarian
 Cari Kota: Pengguna dapat mencari cuaca berdasarkan Nama Kota.
-
 Auto-complete: Dilengkapi dengan fitur auto-complete yang memberikan saran nama kota (contoh: Jakarta, New York, dll.) saat mengetik.
-
 Kota Favorit:
-
 Pengguna dapat Menyimpan Kota Favorit.
-
 Tersedia tampilan khusus untuk melihat daftar kota favorit secara detail.
 
-4. Fitur Interaktif & UX
-Toggle Satuan Suhu: Tombol untuk beralih antara satuan Celsius (°C) dan Fahrenheit (°F).
+# Tampilan website 
+<img width="1861" height="906" alt="image" src="https://github.com/user-attachments/assets/507b037f-fe56-4546-a087-48aa96278c0d" />
+<img width="1905" height="891" alt="image" src="https://github.com/user-attachments/assets/24a5f3f3-a46e-4aa7-9bbd-9280122ea5ce" />
+<img width="1909" height="915" alt="image" src="https://github.com/user-attachments/assets/e05ec391-403a-4a76-88dc-1986f0f5f779" />
+<img width="1856" height="889" alt="image" src="https://github.com/user-attachments/assets/2fe23f1c-edb4-45e9-a565-2a69c18bc8cb" />
 
-Toggle Tema: Tombol untuk beralih antara mode Dark Theme (Tema Gelap) dan Light Theme (Tema Terang), dengan preferensi tersimpan di Local Storage.
-
-Tombol Refresh: Memungkinkan pembaruan data cuaca secara manual.
-
-Loading Indicators: Tampilan indikator memuat (<i class="fas fa-spinner fa-spin">) saat data sedang diambil dari API.
-
-Navigasi Sidebar: Navigasi sederhana untuk beralih antara tampilan Cuaca Utama dan Daftar Kota Favorit.
 
 # 💻 Teknologi
 HTML5
